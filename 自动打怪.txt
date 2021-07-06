@@ -1,0 +1,134 @@
+// 低血量坐标
+Dim lowhpx, lowhpy
+// 高血量坐标
+Dim highhpx, highhpy
+// 低蓝量坐标
+Dim lowmpx, lowmpy
+// 高蓝量坐标
+Dim highmpx, highmpy
+// 火球放在1技能位置
+// 火球技能的坐标
+Dim fireballx, firebally
+Dim targetx, targety
+// 是否需要休息
+Dim isneedrest
+// 具体的值
+lowhpx = 181
+lowhpy = 127
+lowmpx = 188
+lowmpy = 137
+fireballx = 264
+firebally = 738
+targetx = 296
+targety= 111
+isneedrest = False
+// 初始化窗口大小
+Sub init
+    hwnd = Plugin.Window.Foreground()
+    Plugin.Window.Size hwnd, 1300, 720
+    Delay 1000
+    Plugin.Window.Move hwnd,50,50
+End Sub
+// 帮助函数
+// 打印坐标
+Sub show
+    Delay 5000
+    GetCursorPos cx, cy
+    MsgBox cx & "|" & cy
+End Sub
+// 转向(向左转)
+Sub turn
+    TracePrint "turn..."
+    Delay 200
+    KeyPress "A", 2
+    Delay 50
+End Sub
+// 
+Sub tryfind
+    KeyPress "Tab", 1
+    Delay 200
+    // 是否找到敌人
+    Do While hasTarget
+        fight 
+        // 这个等待是为了防止立马
+        Delay 200
+    Loop
+    Delay 500
+End Sub
+// 恢复
+// 包含回复血量和蓝量
+Sub rest
+    addhp 
+    addmana 
+    If isneedrest = True Then 
+        TracePrint "rest..."
+        Delay 30 * 1000
+        isneedrest = false
+    End If
+End Sub
+// 回复血量
+// 回血食物放在"-"技能处
+Sub addhp
+    IfColor lowhpx,lowhpy , "008500",2 Then
+    Else 
+        TracePrint "need eat food..."
+        KeyPress "-", 1
+        Delay 20
+        isneedrest = true
+    End If
+End Sub
+// 回复蓝量
+// 回蓝的水放在"="技能处
+Sub addmana
+    IfColor lowmpx, lowmpy, "710000", 2 Then
+    Else 
+        TracePrint "need drink water..."
+        KeyPress "=", 1
+        Delay 20
+        isneedrest = true
+    End If
+End Sub
+// 战斗
+// 一直发火球,很呆萌
+// 没有办法发火球,就丢魔杖
+// 1技能是火球
+// 0技能是魔杖
+Sub fight
+    If canUseFireball Then 
+        KeyPress "1", 1
+        Delay 1400
+    Else 
+        KeyPress "0",1
+    End If
+End Sub
+// 是否有敌方目标
+Function hasTarget
+    Dim flag
+    flag = false
+    TracePrint "try to find a target"
+    IfColor targetx, targety, "0000D0", 2 Then
+        TracePrint "find enemy[1]..."
+        If canUseFireball Then 
+            TracePrint "find enemy[2]..."
+            flag = true    	
+        End If
+    End If
+    hasTarget = flag
+End Function
+// 是否火球可以使用
+Function canUseFireball
+    IfColor fireballx, firebally, "F9FFFF", 2 Then
+        TracePrint "can use fireball..."
+        canUseFireball = True
+    Else 
+        canUseFireball =False
+    End If   
+End Function
+// 主程序
+init 
+Rem start
+// 放开目标焦点
+rest 
+turn 
+tryfind 
+Goto start
